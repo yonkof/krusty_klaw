@@ -18,34 +18,50 @@ Spin up isolated OpenClaw AI agents in seconds. Each agent gets its own Docker c
 git clone https://github.com/mableclaw/dockered_openclaw_agent_incubator.git
 cd dockered_openclaw_agent_incubator
 
-# 2. Copy and fill in your API keys
-cp .env.template .env
-nano .env  # Add your ANTHROPIC_API_KEY at minimum
-
-# 3. Spawn your first agent
+# 2. Spawn your first agent (interactive — will ask for API keys)
 ./spawn_agent.sh my-agent 18800
-
-# 4. Launch it
-cd deployed_agents/my-agent
-docker compose up -d
 ```
 
-That's it. Your agent is live at `http://localhost:18800`.
+The spawner will ask if you want to provide your API keys now. If you say **yes**, it injects them into the agent's `.env`, pulls the image, and launches the container — your agent is live at `http://localhost:18800` immediately.
+
+If you say **no**, the container still launches but you'll need to complete onboarding via `docker attach openclaw-my-agent`.
+
+### Pro Mode (--auto)
+
+Pre-configure your keys once in `.env.template`, then spawn agents hands-free:
+
+```bash
+# 1. Fill in your API keys in the template
+nano .env.template  # Set ANTHROPIC_API_KEY (and optionally BRAVE_API_KEY, GITHUB_TOKEN)
+
+# 2. Spawn with --auto — no prompts, keys injected automatically
+./spawn_agent.sh my-agent 18800 --auto
+```
 
 ## Usage
 
 ```bash
-# Spawn an agent (name + port)
+# Spawn an agent (interactive mode — prompts for API keys)
 ./spawn_agent.sh <agent-name> <port>
+
+# Spawn an agent (auto mode — injects keys from .env.template, no prompts)
+./spawn_agent.sh <agent-name> <port> --auto
 
 # Examples
 ./spawn_agent.sh research-bot 18801
-./spawn_agent.sh code-reviewer 18802
+./spawn_agent.sh code-reviewer 18802 --auto
 ./spawn_agent.sh personal-assistant 18803
 
 # Show help
 ./spawn_agent.sh --help
 ```
+
+### Flags
+
+| Flag | Description |
+|------|-------------|
+| `--auto` | Skip interactive prompts. Reads API keys from `.env.template` and injects any real (non-placeholder) values into the agent's `.env`. Pulls the image and launches the container automatically. |
+| `--help` | Show usage information |
 
 Each spawn creates a self-contained directory under `deployed_agents/`:
 
@@ -69,6 +85,14 @@ dockered_openclaw_agent_incubator/
 │   └── .gitkeep
 └── .gitignore
 ```
+
+## Onboarding Flow
+
+When you spawn an agent, one of three things happens:
+
+1. **Interactive YES** — You enter your API key at the prompt. The spawner writes it to `.env`, pulls the image, and starts the container. Agent is live immediately.
+2. **Interactive NO** — Container launches but needs onboarding. Run `docker attach openclaw-<name>` to complete setup via the TUI.
+3. **`--auto` mode** — Keys are read from `.env.template` automatically. If a valid `ANTHROPIC_API_KEY` is found, the agent launches fully configured. If not, it launches but needs manual onboarding.
 
 ## Managing Agents
 
