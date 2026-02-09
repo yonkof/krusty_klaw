@@ -3,6 +3,7 @@ services:
   openclaw-{{AGENT_NAME}}:
     image: openclaw/openclaw:latest
     container_name: openclaw-{{AGENT_NAME}}
+    user: "${UID}:${GID}"
     ports:
       - "{{PORT}}:18789"
     env_file:
@@ -10,4 +11,10 @@ services:
     volumes:
       - ./workspace:/app/workspace
       - ./config:/root/.openclaw
+    networks:
+      - openclaw-fleet
     restart: unless-stopped
+
+networks:
+  openclaw-fleet:
+    external: true

@@ -78,6 +78,10 @@ fi
 [[ -f "$TEMPLATE_COMPOSE" ]] || die "Missing docker-compose.template.yml"
 [[ -f "$TEMPLATE_ENV" ]] || die "Missing .env.template"
 
+# --- Ensure fleet network exists ---
+docker network inspect openclaw-fleet >/dev/null 2>&1 || docker network create openclaw-fleet
+ok "Fleet network ready (openclaw-fleet)"
+
 # --- Generate gateway token ---
 GATEWAY_TOKEN=$(openssl rand -hex 32)
 
@@ -99,6 +103,7 @@ cat >> "${AGENT_DIR}/.env" <<EOF
 # --- Agent-Specific (auto-generated) ---
 OPENCLAW_AGENT_NAME=${AGENT_NAME}
 OPENCLAW_GATEWAY_TOKEN=${GATEWAY_TOKEN}
+GATEWAY_TOKEN=${GATEWAY_TOKEN}
 EOF
 ok "Created .env with gateway token"
 

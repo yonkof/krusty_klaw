@@ -109,6 +109,38 @@ Optional keys unlock extra capabilities (web search, GitHub integration, etc.).
 | Missing API key errors | Ensure `.env` has your `ANTHROPIC_API_KEY` set |
 | Docker not running | Start Docker Desktop or `sudo systemctl start docker` |
 
+## Inter-Agent Communication / DNS Resolution
+
+All agents spawned by this incubator automatically join a shared Docker network called `openclaw-fleet`. This enables direct container-to-container communication using DNS hostnames.
+
+### How It Works
+
+- The `openclaw-fleet` network is created automatically by `spawn_agent.sh` if it doesn't already exist
+- Each agent's container name follows the pattern `openclaw-<agent-name>`
+- Containers on the same Docker network can resolve each other by container name
+
+### Reaching Other Agents
+
+From inside any agent container, you can reach another agent using its container name as the hostname:
+
+```
+http://openclaw-research-bot:18789
+http://openclaw-code-reviewer:18789
+```
+
+> **Note:** Use the internal port `18789` (not the host-mapped port) when communicating between containers on the fleet network.
+
+### Example
+
+```bash
+# Spawn two agents
+./spawn_agent.sh agent-alpha 18801
+./spawn_agent.sh agent-beta 18802
+
+# From inside agent-alpha, you can reach agent-beta at:
+# http://openclaw-agent-beta:18789
+```
+
 ## License
 
 MIT
