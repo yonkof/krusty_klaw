@@ -78,6 +78,16 @@ By standardizing on **Ubuntu 24.04** inside Hyper-V, we ensure that every develo
    ssh your_username@192.168.1.50
    ```
 
+### Pre-Installation Check
+
+Before spawning your first agent, confirm your local OpenClaw image tag:
+
+```bash
+docker ps --format '{{.Image}}'
+```
+
+Ensure the output matches the image name in your `docker-compose.template.yml`. If you built OpenClaw locally, the image will typically be `openclaw:local` rather than a Docker Hub reference.
+
 ### Phase 4: Birth (The Incubator)
 
 1. **Install Docker:**
@@ -120,7 +130,13 @@ Just because a "road" (network) exists doesn't mean an agent is authorized to dr
 The Incubator supports two deployment philosophies to balance automation with manual control:
 
 - **The Automated Path** — When running the spawn script with pre-configured API keys (e.g., in the root `.env.template`), the agent is **"Born Ready"**. The script injects the generated `OPENCLAW_GATEWAY_TOKEN` and launches the agent instantly.
-- **The Guided Path (TUI)** — If the user chooses to perform manual setup, the script launches the container but pauses for the user to "attach" to the terminal. This allows for a hand-crafted configuration via the standard **OpenClaw Onboarding Wizard**.
+- **The Guided Path (TUI)** — If the user chooses to perform manual setup, the script launches the container and provides the command to enter the configuration wizard:
+
+  ```bash
+  docker exec -it openclaw-[AGENT_NAME] npx openclaw configure
+  ```
+
+  This opens the standard **OpenClaw Onboarding Wizard** for hand-crafted configuration of model, channels, skills, and more.
 
 ---
 
@@ -129,6 +145,7 @@ The Incubator supports two deployment philosophies to balance automation with ma
 - **Snapshots are your friend** — Take a Hyper-V **Checkpoint** before any major experimental runs.
 - **Resource Monitoring** — Use `docker stats` inside the VM to ensure your agents aren't fighting for CPU/RAM.
 - **Persistence** — All agent data lives in the `deployed_agents/` directory on the VM host. **Back up this folder** to preserve their long-term memory.
+- **Port Ranges** — Ensure your chosen host port does not overlap with the Mother Agent's range (typically `18789-18790`). The auto-port feature starts new agents at `18791` and above to avoid conflicts.
 
 ---
 
