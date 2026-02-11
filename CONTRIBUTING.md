@@ -1,10 +1,10 @@
-# Contributing to OpenClaw Agent Incubator
+# Contributing to Krusty Klaw - Containerized OpenClaw Agents Generator
 
-Thank you for your interest in contributing to the OpenClaw Incubator ecosystem! 🐙 Whether it's a bug fix, a new feature, or improved documentation — every contribution helps make agent deployment better for everyone.
+Thank you for your interest in contributing to the Containerized OpenClaw Agents Generator ecosystem! 🐙 Whether it's a bug fix, a new feature, or improved documentation — every contribution helps make agent deployment better for everyone.
 
 ## Bug Reports
 
-Found a bug? Please [open an issue](https://github.com/yonkof/dockered_openclaw_agent_incubator/issues/new) and include:
+Found a bug? Please [open an issue](https://github.com/yonkof/krusty_klaw/issues/new) and include:
 
 - **Ubuntu version** (`lsb_release -a`)
 - **Docker version** (`docker --version` and `docker compose version`)
