@@ -1,0 +1,65 @@
+# ============================================
+# Dockerfile.custom — Agent-Specific Dependencies
+# ============================================
+# This file extends the base OpenClaw image with tools your agent needs.
+# Dependencies installed here are "Born Ready" — they survive container
+# restarts, rebuilds, and resets.
+#
+# Usage:
+#   1. Add your dependencies below
+#   2. Run: ./spawn_agent.sh <agent-name> [port]
+#      (spawn_agent.sh auto-detects this file and builds from it)
+#
+# The base image is node:22-bookworm (Debian) running as user 'node'.
+# Install system packages as root, then switch back to 'node' for
+# user-level tools.
+# ============================================
+
+ARG BASE_IMAGE=openclaw:local
+FROM ${BASE_IMAGE}
+
+# --- System packages (as root) ---
+USER root
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        python3-pip \
+        python3-venv \
+        curl \
+        jq \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- gog CLI (Gmail/Drive/Docs/Calendar) ---
+RUN ARCH=$(dpkg --print-architecture) && \
+    GOG_VERSION="v0.9.0" && \
+    if [ "$ARCH" = "amd64" ]; then GOG_ARCH="x86_64"; \
+    elif [ "$ARCH" = "arm64" ]; then GOG_ARCH="aarch64"; \
+    else GOG_ARCH="$ARCH"; fi && \
+    curl -fsSL "https://github.com/pterm/gog/releases/download/${GOG_VERSION}/gog_Linux_${GOG_ARCH}.tar.gz" \
+        | tar xz -C /usr/local/bin gog && \
+    chmod +x /usr/local/bin/gog
+
+# --- himalaya CLI (email client) ---
+RUN ARCH=$(dpkg --print-architecture) && \
+    HIMALAYA_VERSION="v1.1.0" && \
+    if [ "$ARCH" = "amd64" ]; then HIMALAYA_ARCH="x86_64"; \
+    elif [ "$ARCH" = "arm64" ]; then HIMALAYA_ARCH="aarch64"; \
+    else HIMALAYA_ARCH="$ARCH"; fi && \
+    curl -fsSL "https://github.com/pimalaya/himalaya/releases/download/${HIMALAYA_VERSION}/himalaya.linux.${HIMALAYA_ARCH}.tar.gz" \
+        | tar xz -C /usr/local/bin himalaya && \
+    chmod +x /usr/local/bin/himalaya
+
+# --- Python packages (as node user) ---
+USER node
+RUN pip3 install --user --break-system-packages \
+    pandas \
+    numpy
+
+# ============================================
+# Add your own dependencies below this line:
+# ============================================
+# Example:
+#   USER root
+#   RUN apt-get update && apt-get install -y ffmpeg
+#   USER node
+#   RUN pip3 install --user --break-system-packages scikit-learn

@@ -95,6 +95,7 @@ dockered_openclaw_agent_incubator/
 ├── README.md                      # You are here
 ├── .env.template                  # Environment variable blueprint
 ├── docker-compose.template.yml    # Compose template with placeholders
+├── Dockerfile.custom              # Agent-specific dependencies (gog, himalaya, etc.)
 ├── spawn_agent.sh                 # Factory script — creates new agents
 ├── deployed_agents/               # All spawned agents live here
 │   └── .gitkeep
@@ -108,6 +109,67 @@ When you spawn an agent, one of three things happens:
 1. **Interactive YES** — You enter your API key at the prompt. The spawner writes it to `.env`, pulls the image, and starts the container. Agent is live immediately.
 2. **Interactive NO** — Container launches but needs onboarding. Run `docker attach openclaw-<name>` to complete setup via the TUI.
 3. **`--auto` mode** — Keys are read from `.env.template` automatically. If a valid `ANTHROPIC_API_KEY` is found, the agent launches fully configured. If not, it launches but needs manual onboarding.
+
+## Custom Dependencies (Dockerfile.custom)
+
+If your agent needs tools beyond the base OpenClaw image (Python packages, CLI tools, system libraries), create or edit `Dockerfile.custom` in the repo root.
+
+When `spawn_agent.sh` detects this file, it **automatically builds a custom image** instead of pulling the stock one. Your dependencies are baked in — they survive restarts, rebuilds, and resets.
+
+A ready-to-use `Dockerfile.custom` is included with **gog** (Gmail/Drive CLI) and **himalaya** (email client) pre-configured. Add your own dependencies at the bottom:
+
+```dockerfile
+# Example: add ffmpeg and a Python ML library
+USER root
+RUN apt-get update && apt-get install -y ffmpeg
+USER node
+RUN pip3 install --user --break-system-packages scikit-learn
+```
+
+### How It Works
+
+1. `spawn_agent.sh` checks for `Dockerfile.custom` in the repo root
+2. If found, builds `openclaw-custom:<agent-name>` using the base image as a layer
+3. Updates the agent's `docker-compose.yml` to use the custom image
+4. If not found, falls back to pulling `openclaw:local` as usual
+
+### Rebuilding After Changes
+
+If you modify `Dockerfile.custom` after spawning an agent, rebuild manually:
+
+```bash
+docker build -f Dockerfile.custom -t openclaw-custom:<agent-name> .
+cd deployed_agents/<agent-name> && docker compose up -d --force-recreate
+```
+
+## Storage Persistence: Luggage vs Wallpaper
+
+Understanding what survives a container reset is critical:
+
+### 🧳 Luggage (Persistent — Survives Resets)
+
+These directories are **mounted volumes** — they live on the host filesystem and persist across container restarts, rebuilds, and resets:
+
+| Path (inside container) | Host location | Contains |
+|---|---|---|
+| `/app/workspace` | `deployed_agents/<name>/workspace/` | Your files, code, memory, projects |
+| `/root/.openclaw` | `deployed_agents/<name>/config/` | OpenClaw config, gateway token, sessions |
+
+**Rule of thumb:** If it's in `workspace/` or `config/`, it's safe. ✅
+
+### 🖼️ Wallpaper (Temporary — Lost on Reset)
+
+Everything else inside the container is **ephemeral** — it's part of the Docker image layer and gets wiped when the container is recreated:
+
+| What | Example | Solution |
+|---|---|---|
+| `pip install` packages | `pandas`, `numpy` | Add to `Dockerfile.custom` |
+| Downloaded binaries | `~/.local/bin/gog` | Add to `Dockerfile.custom` |
+| apt-installed tools | `ffmpeg`, `jq` | Add to `Dockerfile.custom` |
+| `/tmp` files | temp downloads | Move to workspace if needed |
+| System config changes | `/etc/` modifications | Add to `Dockerfile.custom` |
+
+**Rule of thumb:** If you installed it at runtime, it's wallpaper. Bake it into `Dockerfile.custom` to make it luggage. 🧳
 
 ## Managing Agents
 

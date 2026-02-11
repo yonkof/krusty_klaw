@@ -19,6 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPLOY_DIR="${SCRIPT_DIR}/deployed_agents"
 TEMPLATE_COMPOSE="${SCRIPT_DIR}/docker-compose.template.yml"
 TEMPLATE_ENV="${SCRIPT_DIR}/.env.template"
+CUSTOM_DOCKERFILE="${SCRIPT_DIR}/Dockerfile.custom"
 
 # --- Detect --auto flag ---
 AUTO_MODE=false
@@ -183,10 +184,30 @@ inject_key() {
     fi
 }
 
+# Helper: build custom image if Dockerfile.custom exists
+build_custom_image() {
+    if [[ -f "$CUSTOM_DOCKERFILE" ]]; then
+        CUSTOM_IMAGE="openclaw-custom:${AGENT_NAME}"
+        info "Found Dockerfile.custom — building custom image ${BOLD}${CUSTOM_IMAGE}${NC}..."
+        docker build -f "$CUSTOM_DOCKERFILE" \
+            --build-arg BASE_IMAGE="${BASE_OPENCLAW_IMAGE:-openclaw:local}" \
+            -t "$CUSTOM_IMAGE" \
+            "$SCRIPT_DIR" || die "Custom image build failed"
+        ok "Custom image built: ${CUSTOM_IMAGE}"
+        # Patch the agent's docker-compose.yml to use the custom image
+        sed -i "s|image: openclaw:local|image: ${CUSTOM_IMAGE}|g" "${AGENT_DIR}/docker-compose.yml"
+        ok "Updated docker-compose.yml to use custom image"
+        return 0  # custom image built
+    fi
+    return 1  # no custom dockerfile
+}
+
 # Helper: launch the container
 launch_container() {
-    info "Pulling latest OpenClaw image..."
-    (cd "${AGENT_DIR}" && docker compose pull 2>&1) || warn "Pull failed — will use cached image if available"
+    if ! build_custom_image; then
+        info "Pulling latest OpenClaw image..."
+        (cd "${AGENT_DIR}" && docker compose pull 2>&1) || warn "Pull failed — will use cached image if available"
+    fi
     info "Launching agent container..."
     (cd "${AGENT_DIR}" && docker compose up -d)
     ok "Container ${BOLD}openclaw-${AGENT_NAME}${NC} is running"
