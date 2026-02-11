@@ -15,8 +15,8 @@ Spin up isolated OpenClaw AI agents in seconds. Each agent gets its own Docker c
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/mableclaw/dockered_openclaw_agent_incubator.git
-cd dockered_openclaw_agent_incubator
+git clone https://github.com/yonkof/krusty_klaw.git
+cd krusty_klaw
 
 # 2. Spawn your first agent (interactive — will ask for API keys)
 ./spawn_agent.sh my-agent
@@ -91,7 +91,7 @@ deployed_agents/my-agent/
 ## Folder Structure
 
 ```
-dockered_openclaw_agent_incubator/
+krusty_klaw/
 ├── README.md                      # You are here
 ├── .env.template                  # Environment variable blueprint
 ├── docker-compose.template.yml    # Compose template with placeholders

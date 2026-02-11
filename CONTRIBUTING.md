@@ -84,4 +84,4 @@ Not sure where to start? Open an issue tagged `question` and we'll point you in 
 
 ---
 
-Thanks for helping make the OpenClaw Incubator better! 🦞
+Thanks for helping make the Krusty Klaw better! 🦞

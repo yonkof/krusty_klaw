@@ -99,8 +99,8 @@ Ensure the output matches the image name in your `docker-compose.template.yml`. 
 2. **Clone & Spawn:**
 
    ```bash
-   git clone https://github.com/mableclaw/dockered_openclaw_agent_incubator.git
-   cd dockered_openclaw_agent_incubator
+   git clone https://github.com/yonkof/krusty_klaw.git
+   cd krusty_klaw
    chmod +x spawn_agent.sh
    ./spawn_agent.sh "Research-Lead" 18789
    ```
