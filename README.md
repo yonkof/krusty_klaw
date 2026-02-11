@@ -1,4 +1,4 @@
-# 🐙 OpenClaw Agent Incubator
+# 🐙 Krusty Klaw - Containerized OpenClaw Agents Generator
 
 Spin up isolated OpenClaw AI agents in seconds. Each agent gets its own Docker container, workspace, config, and gateway token — completely self-contained and ready to pair.
 
